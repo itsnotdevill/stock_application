@@ -40,6 +40,41 @@ Featuring a futuristic dark/light mode UI with **Glassmorphism aesthetics**, **A
 
 ---
 
+## 📸 Project Screenshots
+
+### Authentication
+![Login Page](stock%20trading%20web%20application%20ss/Login%20Page%20%28Dark%29.png)
+![Sign Up Page](stock%20trading%20web%20application%20ss/Sign%20Up%20Page%20%28Dark%29.png)
+
+### Dashboard & Watchlist
+![Dashboard](stock%20trading%20web%20application%20ss/Dashboard%20%28Dark%29.png)
+![Watchlist](stock%20trading%20web%20application%20ss/Watchlist%20%28Dark%29.png)
+
+### Company & Market Analysis
+![Charts IND](stock%20trading%20web%20application%20ss/Charts%20IND%20%28Dark%29.png)
+![Charts USA](stock%20trading%20web%20application%20ss/Charts%20USA%20%28Dark%29.png)
+![Company Info IND 01](stock%20trading%20web%20application%20ss/Company%20Info%20%5BIND%5D%2001%20%28Dark%29.png)
+![Company Info IND 02](stock%20trading%20web%20application%20ss/Company%20Info%20%5BIND%5D%2002%20%28Dark%29.png)
+![Company Info USA 01](stock%20trading%20web%20application%20ss/Company%20Info%20%5BUSA%5D%2001%20%28Dark%29.png)
+![Company Info USA 02](stock%20trading%20web%20application%20ss/Company%20Info%20%5BUSA%5D%2002%20%28Dark%29.png)
+
+### Portfolio & Reports
+![Portfolio 01](stock%20trading%20web%20application%20ss/Portfolio%2001%20%28Dark%29.png)
+![Portfolio 02](stock%20trading%20web%20application%20ss/Portfolio%2002%20%28Dark%29.png)
+![Reports Performance](stock%20trading%20web%20application%20ss/Reports%20%5BPerformance%5D%20%28Dark%29.png)
+![Reports Skills](stock%20trading%20web%20application%20ss/Reports%20%5BSkills%5D%20%28Dark%29.png)
+![Reports Journal](stock%20trading%20web%20application%20ss/Reports%20%5BJournal%5D%20%28Dark%29.png)
+![Reports Learn 01](stock%20trading%20web%20application%20ss/Reports%20%5BLearn%2001%5D%20%28Dark%29.png)
+![Reports Learn 02](stock%20trading%20web%20application%20ss/Reports%20%5BLearn%2002%5D%20%28Dark%29.png)
+
+### Settings
+![Settings General](stock%20trading%20web%20application%20ss/Settings%20%5BGeneral%5D%20%28Dark%29.png)
+![Settings Account 01](stock%20trading%20web%20application%20ss/Settings%20%5BAccount%5D%2001%20%28Dark%29.png)
+![Settings Account 02](stock%20trading%20web%20application%20ss/Settings%20%5BAccount%5D%2002%20%28Dark%29.png)
+![Settings Trading](stock%20trading%20web%20application%20ss/Settings%20%5BTrading%5D%20%28Dark%29.png)
+
+---
+
 ## 🛠 Technology Stack
 
 ### Frontend (Client)
