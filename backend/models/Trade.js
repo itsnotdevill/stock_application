@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const tradeSchema = new mongoose.Schema({
   userId: mongoose.Schema.Types.ObjectId,
@@ -10,4 +10,4 @@ const tradeSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model("Trade", tradeSchema);
+export default mongoose.model("Trade", tradeSchema);

@@ -122,10 +122,12 @@ npm install
 Create a `.env` file in the `backend` directory with the following variables:
 ```env
 PORT=5000
-MONGO_URI=mongodb://127.0.0.1:27017/stock_trading_app
+MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/your_db_name
 JWT_SECRET=your_secure_jwt_secret_key
 GOOGLE_CLIENT_ID=your_google_cloud_client_id
 ```
+
+> **Note**: The application uses a **Dual-Write** architecture. Trades and Portfolios are saved both to the User's profile (for fast frontend access) and to separate MongoDB collections (`trades`, `transactions`, `portfolios`) for better data manageability in Atlas.
 
 Start the backend server:
 ```bash

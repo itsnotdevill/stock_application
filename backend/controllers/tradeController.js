@@ -1,6 +1,7 @@
 import User from "../models/User.js";
-// import Portfolio from "../models/Portfolio.js";
-// import Transaction from "../models/Transaction.js";
+import Portfolio from "../models/Portfolio.js";
+import Transaction from "../models/Transaction.js";
+import Trade from "../models/Trade.js";
 
 // BUY STOCK
 export const buyStock = async (req, res) => {
@@ -17,20 +18,21 @@ export const buyStock = async (req, res) => {
       return res.status(400).json({ message: "Insufficient balance" });
     }
 
-    // Deduct Balance
+    // 1. Deduct Balance (User)
     user.balance -= totalCost;
 
-    // Update Embedded Portfolio
+    // 2. Update Embedded Portfolio (User)
     const portfolioItem = user.portfolio.find(p => p.symbol === symbol);
+    let newAvgPrice = price;
 
     if (portfolioItem) {
-      // Calculate new average price
       const totalValue = (portfolioItem.quantity * portfolioItem.avgPrice) + totalCost;
       const newQuantity = portfolioItem.quantity + quantity;
-      portfolioItem.avgPrice = totalValue / newQuantity;
+      newAvgPrice = totalValue / newQuantity;
+
+      portfolioItem.avgPrice = newAvgPrice;
       portfolioItem.quantity = newQuantity;
     } else {
-      // Create new holding
       user.portfolio.push({
         symbol,
         quantity,
@@ -38,7 +40,7 @@ export const buyStock = async (req, res) => {
       });
     }
 
-    // Record Embedded Transaction
+    // 3. Record Embedded Transaction (User)
     user.transactions.push({
       symbol,
       type: "BUY",
@@ -48,9 +50,47 @@ export const buyStock = async (req, res) => {
 
     await user.save();
 
-    // Find the updated item to return
-    const updatedItem = user.portfolio.find(p => p.symbol === symbol);
+    // --- DUAL WRITE: Separate Collections ---
 
+    // A. Record Transaction
+    await Transaction.create({
+      userId,
+      symbol,
+      type: "BUY",
+      quantity,
+      price
+    });
+
+    // B. Record Trade History
+    await Trade.create({
+      userId,
+      symbol,
+      type: "BUY",
+      quantity,
+      price,
+      profitLoss: 0
+    });
+
+    // C. Update Portfolio Collection
+    let portDoc = await Portfolio.findOne({ userId, symbol });
+    if (portDoc) {
+      portDoc.quantity += quantity;
+      // Recalculate avg price for the separate doc too (should match embedded)
+      const currentVal = (portDoc.quantity - quantity) * portDoc.avgPrice; // value before add
+      portDoc.avgPrice = (currentVal + totalCost) / portDoc.quantity;
+      await portDoc.save();
+    } else {
+      await Portfolio.create({
+        userId,
+        symbol,
+        quantity,
+        avgPrice: price
+      });
+    }
+
+    // ----------------------------------------
+
+    const updatedItem = user.portfolio.find(p => p.symbol === symbol);
     res.json({ message: `Successfully bought ${quantity} shares of ${symbol}`, balance: user.balance, portfolioItem: updatedItem });
 
   } catch (error) {
@@ -74,18 +114,17 @@ export const sellStock = async (req, res) => {
       return res.status(400).json({ message: "Insufficient holdings to sell" });
     }
 
-    // Add Balance
+    // 1. Add Balance (User)
     const totalValue = quantity * price;
     user.balance += totalValue;
 
-    // Update Embedded Portfolio
+    // 2. Update Embedded Portfolio (User)
     portfolioItem.quantity -= quantity;
     if (portfolioItem.quantity === 0) {
-      // Remove item if quantity is 0
       user.portfolio = user.portfolio.filter(p => p.symbol !== symbol);
     }
 
-    // Record Embedded Transaction
+    // 3. Record Embedded Transaction (User)
     user.transactions.push({
       symbol,
       type: "SELL",
@@ -94,6 +133,44 @@ export const sellStock = async (req, res) => {
     });
 
     await user.save();
+
+    // --- DUAL WRITE: Separate Collections ---
+
+    // A. Record Transaction
+    await Transaction.create({
+      userId,
+      symbol,
+      type: "SELL",
+      quantity,
+      price
+    });
+
+    // B. Record Trade History
+    // Calculate P/L for this specific trade
+    const buyPrice = portfolioItem.avgPrice; // using the avg price as cost basis
+    const profitLoss = (price - buyPrice) * quantity;
+
+    await Trade.create({
+      userId,
+      symbol,
+      type: "SELL",
+      quantity,
+      price,
+      profitLoss
+    });
+
+    // C. Update Portfolio Collection
+    let portDoc = await Portfolio.findOne({ userId, symbol });
+    if (portDoc) {
+      if (portDoc.quantity <= quantity) {
+        await Portfolio.deleteOne({ _id: portDoc._id });
+      } else {
+        portDoc.quantity -= quantity;
+        await portDoc.save();
+      }
+    }
+
+    // ----------------------------------------
 
     res.json({ message: `Successfully sold ${quantity} shares of ${symbol}`, balance: user.balance });
 
