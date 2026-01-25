@@ -43,7 +43,7 @@ export default function Signup() {
             } else {
                 setError(res.message || "Google Sign Up failed");
             }
-        } catch (err) {
+        } catch {
             setError("Google Sign Up Error");
         } finally {
             setLoading(false);

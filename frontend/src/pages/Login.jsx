@@ -26,7 +26,7 @@ export default function Login() {
       } else {
         setError(res.message || "Login failed");
       }
-    } catch (err) {
+    } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -44,7 +44,7 @@ export default function Login() {
       } else {
         setError(res.message || "Google Login failed");
       }
-    } catch (err) {
+    } catch {
       setError("Google Login Error");
     } finally {
       setLoading(false);

@@ -20,7 +20,7 @@ export default function Company() {
   // Update symbol from URL
   useEffect(() => {
     const querySymbol = searchParams.get("symbol");
-    if (querySymbol) {
+    if (querySymbol && querySymbol.toUpperCase() !== symbol) {
       setSymbol(querySymbol.toUpperCase());
     }
   }, [searchParams]);
@@ -187,8 +187,8 @@ export default function Company() {
 
             <div>
               <div style={{ display: "flex", gap: "1rem" }}>
-                <button 
-                  className="action-btn" 
+                <button
+                  className="action-btn"
                   onClick={() => toggleTrade('BUY')}
                   style={{
                     background: "var(--success)",
@@ -210,8 +210,8 @@ export default function Company() {
                 >
                   <span>🚀</span> BUY
                 </button>
-                <button 
-                  className="action-btn" 
+                <button
+                  className="action-btn"
                   onClick={() => toggleTrade('SELL')}
                   style={{
                     background: "var(--danger)",
