@@ -52,6 +52,10 @@ Featuring a futuristic dark/light mode UI with **Glassmorphism aesthetics**, **A
 ![Login Page](stock%20trading%20web%20application%20ss/Login%20Page%20%28Dark%29.png)
 ![Sign Up Page](stock%20trading%20web%20application%20ss/Sign%20Up%20Page%20%28Dark%29.png)
 
+### Admin Dashboard
+![Admin Dashboard](stock%20trading%20web%20application%20ss/Admin%20Dashboard%20%28Dark%29.png)
+![Admin User Details](stock%20trading%20web%20application%20ss/Admin%20Dashboard%20User%20Data%20.png)
+
 ### Dashboard & Watchlist
 ![Dashboard](stock%20trading%20web%20application%20ss/Dashboard%20%28Dark%29.png)
 ![Watchlist](stock%20trading%20web%20application%20ss/Watchlist%20%28Dark%29.png)
