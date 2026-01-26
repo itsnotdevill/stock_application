@@ -34,16 +34,25 @@ export const register = async (req, res) => {
 /* ================= LOGIN ================= */
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
+
+    // Normalize input
+    email = email.trim().toLowerCase();
+    password = password.trim();
 
     // 1️⃣ Check user exists
     const user = await User.findOne({ email });
+    console.log(`Login attempt for: ${email}`);
+
     if (!user) {
+      console.log("User not found in DB");
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
     // 2️⃣ Compare password
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log(`Password match result: ${isMatch}`);
+
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
@@ -62,6 +71,7 @@ export const login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
       },
     });
   } catch (error) {

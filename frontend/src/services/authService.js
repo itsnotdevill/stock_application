@@ -33,5 +33,16 @@ export async function googleLogin(token) {
         body: JSON.stringify({ token }),
     });
 
+    if (!res.ok) {
+        const text = await res.text();
+        try {
+            const json = JSON.parse(text);
+            throw new Error(json.message || `Server error: ${res.status}`);
+        } catch (e) {
+            // If parsing fails, throw the text or generic error
+            throw new Error(text || `Request failed with status ${res.status}`);
+        }
+    }
+
     return res.json();
 }

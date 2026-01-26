@@ -11,6 +11,7 @@ import Charts from "./pages/Charts";
 import Company from "./pages/Company";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import AdminDashboard from "./pages/AdminDashboard";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -50,6 +51,7 @@ export default function App() {
                 <Route path="/company" element={<Company />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/admin" element={<AdminDashboard />} />
               </Route>
 
               {/* Fallback */}

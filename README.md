@@ -26,6 +26,12 @@ Featuring a futuristic dark/light mode UI with **Glassmorphism aesthetics**, **A
 - **Risk Management**: Configure custom **Risk Limits** and **Leverage** (1x to 10x) in Settings.
 - **Dynamic Portfolio**: Real-time calculation of Holdings, Net Worth, and P/L (Profit & Loss).
 
+### 🛡️ Admin Dashboard
+- **User Management**: View comprehensive list of all registered users.
+- **System Overview**: Track total user base and total funds currently in the system.
+- **Detailed Analytics**: Drill down into individual user profiles to inspect their **Current Holdings** and **Transaction History**.
+- **Role-Based Access**: Secure, protected routes accessible only to users with 'Admin' privileges.
+
 ### ⚙️ Settings & Customization
 - **Account Management**: View paper trading account details (Account ID, Region, Plan).
 - **Danger Zone**: One-click reset functionality to wipe portfolio data and restart your trading journey.
@@ -131,10 +137,22 @@ GOOGLE_CLIENT_ID=your_google_cloud_client_id
 
 Start the backend server:
 ```bash
-npm start
-# OR for development with auto-restart
 npm run dev
 ```
+
+#### ⚡ Quick Start (Windows)
+We have included a convenience script to start both the backend and frontend simultaneously:
+1. Double-click the `start_app.bat` file in the root directory.
+2. This will launch two command windows (one for each service) and give you the URLs.
+
+#### 🛡️ Creating an Admin User
+To access the Admin Dashboard:
+1. Open a terminal in the `backend` directory.
+2. Run the seeding script: `node seedAdmin.js`
+3. This creates a user with credentials:
+   - **Email**: `admin@tradeverse.com`
+   - **Password**: `adminpassword123`
+4. Log in with these credentials to access the Admin features.
 
 ### 3. Frontend Configuration
 Open a new terminal, navigate to the frontend folder, and install dependencies:

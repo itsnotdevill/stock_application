@@ -1,6 +1,6 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -9,8 +9,8 @@ import { Server } from "socket.io";
 import authRoutes from "./routes/authRoutes.js";
 import tradeRoutes from "./routes/tradeRoutes.js";
 import portfolioRoutes from "./routes/portfolioRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
-dotenv.config();
 connectDB();
 
 const app = express();
@@ -28,6 +28,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/trade", tradeRoutes);
 app.use("/api/portfolio", portfolioRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Start Live Price Fetcher
 import priceFetcher from "./utils/priceFetcher.js";

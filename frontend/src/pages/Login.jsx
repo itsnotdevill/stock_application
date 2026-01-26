@@ -22,7 +22,11 @@ export default function Login() {
       if (res.token) {
         localStorage.setItem("token", res.token);
         localStorage.setItem("user", JSON.stringify(res.user));
-        navigate("/dashboard");
+        if (res.user.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
       } else {
         setError(res.message || "Login failed");
       }
@@ -44,8 +48,9 @@ export default function Login() {
       } else {
         setError(res.message || "Google Login failed");
       }
-    } catch {
-      setError("Google Login Error");
+    } catch (err) {
+      console.error("Google Login Error Details:", err);
+      setError(err.message || "Google Login Error");
     } finally {
       setLoading(false);
     }

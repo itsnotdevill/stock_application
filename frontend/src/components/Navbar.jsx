@@ -70,6 +70,11 @@ export default function Navbar() {
     { name: "Settings", path: "/settings", icon: "⚙️" },
   ];
 
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  if (user && user.role === "admin") {
+    navItems.push({ name: "Admin", path: "/admin", icon: "🛡️" });
+  }
+
   return (
     <nav className="navbar">
       <style>{`
