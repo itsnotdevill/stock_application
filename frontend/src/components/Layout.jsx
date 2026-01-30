@@ -1,8 +1,7 @@
-import React from 'react';
-import Navbar from './Navbar';
-import { Outlet, useLocation } from 'react-router-dom';
-import AiAssistant from './AiAssistant';
-import TickerTape from './TickerTape';
+import { Outlet, useLocation } from "react-router-dom";
+import Navbar from "./Navbar";
+import TickerTape from "./TickerTape";
+import AiAssistant from "./AiAssistant";
 
 const Layout = () => {
     const location = useLocation();
@@ -13,20 +12,16 @@ const Layout = () => {
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--bg-primary)' }}>
+        <div className="flex flex-col min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] overflow-hidden transition-colors duration-300">
             <TickerTape />
 
-            <div style={{ display: 'flex', flex: 1 }}>
+            <div className="flex flex-1 relative">
+                {/* Sidebar */}
                 <Navbar />
-                <main style={{
-                    flex: 1,
-                    marginLeft: '260px', /* Matches var(--sidebar-width) explicitly */
-                    padding: '2rem',
-                    width: 'calc(100% - 260px)',
-                    boxSizing: 'border-box',
-                    marginTop: '0' /* Ticker is above this flex container */
-                }}>
-                    <div className="animate-fade-in">
+
+                {/* Main Content Area */}
+                <main className="flex-1 ml-[260px] relative overflow-y-auto h-[calc(100vh-40px)] scroll-smooth custom-scrollbar">
+                    <div className="animate-fade-in min-h-full">
                         <Outlet />
                     </div>
                 </main>

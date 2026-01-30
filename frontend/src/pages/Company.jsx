@@ -6,6 +6,15 @@ import TradePanel from "../components/TradePanel";
 import StockSelector from "../components/StockSelector";
 import { COMPANY_DATA } from "../utils/mockData";
 import { usePrices } from "../context/PriceContext";
+import Card from "../components/Card";
+import Badge from "../components/Badge";
+
+const FundamentalRow = ({ label, value }) => (
+  <div className="flex justify-between items-center py-2 border-b border-white/5 last:border-0 hover:bg-white/5 px-2 -mx-2 rounded transition-colors">
+    <span className="text-slate-400 text-sm font-medium">{label}</span>
+    <span className="text-white font-mono font-semibold">{value}</span>
+  </div>
+);
 
 export default function Company() {
   const [searchParams] = useSearchParams();
@@ -17,7 +26,6 @@ export default function Company() {
   const { getPrice } = usePrices();
   const livePrice = getPrice(symbol);
 
-  // Update symbol from URL
   useEffect(() => {
     const querySymbol = searchParams.get("symbol");
     if (querySymbol && querySymbol.toUpperCase() !== symbol) {
@@ -25,7 +33,7 @@ export default function Company() {
     }
   }, [searchParams]);
 
-  // Generic Data Generator for unknown stocks
+  // Generic Data Generator
   const generateGenericData = (sym) => {
     const seed = sym.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const basePrice = (seed % 1000) + 100;
@@ -47,39 +55,17 @@ export default function Company() {
     };
   };
 
-  // Fetch Fundamentals (Mock First, then API, then Generic Fallback)
   useEffect(() => {
     const fetchFundamentals = async () => {
-      setMetrics(null); // Reset to show skeleton
-
-      // 1. Try Specific Mock Data
+      setMetrics(null);
       if (COMPANY_DATA[symbol]) {
-        setTimeout(() => setMetrics(COMPANY_DATA[symbol]), 500); // Fake delay for realism
+        setTimeout(() => setMetrics(COMPANY_DATA[symbol]), 500);
         return;
       }
-
-      // 2. Fallback: API (if key exists)
-      const apiKey = import.meta.env.VITE_ALPHA_VANTAGE_API_KEY;
-      if (apiKey && apiKey.length > 5 && !apiKey.startsWith('sk-')) {
-        try {
-          const cleanSymbol = symbol.replace(".BSE", "");
-          const res = await fetch(`https://www.alphavantage.co/query?function=OVERVIEW&symbol=${cleanSymbol}&apikey=${apiKey}`);
-          const data = await res.json();
-          if (data && data.Symbol) {
-            setMetrics(data);
-            return;
-          }
-        } catch (err) {
-          console.error("Fundametal fetch error", err);
-        }
-      }
-
-      // 3. Final Fallback: Generic Data (So user ALWAYS sees something)
       setTimeout(() => {
         setMetrics(generateGenericData(symbol));
       }, 800);
     };
-
     fetchFundamentals();
   }, [symbol]);
 
@@ -88,237 +74,144 @@ export default function Company() {
     setShowTradeModal(true);
   };
 
-  const getCurrency = (sym) => {
-    const usStocks = ["IBM", "TSLA", "AAPL", "NVDA", "GOOGL", "AMZN", "MSFT", "META"];
-    return usStocks.includes(sym) ? "$" : "₹";
-  };
-  const currency = getCurrency(symbol);
+  const currency = ["IBM", "TSLA", "AAPL", "NVDA", "GOOGL", "AMZN", "MSFT", "META"].includes(symbol) ? "$" : "₹";
 
-  // Market Status Logic
-  const getMarketStatus = (sym) => {
-    const isUS = ["IBM", "TSLA", "AAPL", "NVDA", "GOOGL", "AMZN", "MSFT", "META"].includes(sym);
-    // Simple static logic based on timezone for now, or just mock it to align with sidebar
-    // If we want to be "smart", we check current UTC time. 
-    // Indian Market: 03:45 AM UTC - 09:30 AM UTC (approx 9:15 AM - 3:30 PM IST)
-    // US Market: 13:30 UTC - 20:00 UTC (approx 9:30 AM - 4:00 PM EST)
-
-    const now = new Date();
-    const utcHigh = now.getUTCHours() * 60 + now.getUTCMinutes();
-
-    if (isUS) {
-      // 13:30 (810 mins) to 20:00 (1200 mins)
-      const isOpen = utcHigh >= 810 && utcHigh <= 1200;
-      return { name: "NASDAQ/NYSE", status: isOpen ? "Market Open" : "Market Closed", color: isOpen ? "var(--success)" : "var(--danger)" };
-    } else {
-      // 03:45 (225 mins) to 10:00 (600 mins) - approx
-      const isOpen = utcHigh >= 225 && utcHigh <= 600;
-      return { name: "NSE", status: isOpen ? "Market Open" : "Market Closed", color: isOpen ? "var(--success)" : "var(--danger)" };
-    }
-  };
-
-  const marketInfo = getMarketStatus(symbol);
-
-  // Use livePrice if available, otherwise fallback to metrics basePrice
-  // Note: We use metrics?.basePrice from our generic generator if livePrice is missing
   const displayPrice = livePrice > 0 ? livePrice : (metrics?.basePrice || 0);
+  const change = getPrice(symbol)?.changePercent || 0;
 
   return (
-    <div className="company-page animate-fade-in" style={{ paddingBottom: "2rem" }}>
-      <style>{`
-          /* ... styles ... */
-         .company-layout {
-            display: grid;
-            grid-template-columns: 260px 1fr;
-            gap: 2rem;
-         }
-         @media (max-width: 1200px) {
-            .company-layout { grid-template-columns: 1fr; }
-         }
-         
-         /* ... rest of styles ... */
-         /* Ensure Skeleton has space to breathe */
-         .skeleton-wrapper {
-             margin-bottom: 1rem;
-         }
+    <div className="h-[calc(100vh-80px)] p-6 max-w-[1920px] mx-auto overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 h-full">
+        {/* LEFT: SELECTOR */}
+        <Card className="h-full flex flex-col p-0 overflow-hidden" title="Market Watch">
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
+            <StockSelector />
+          </div>
+        </Card>
 
-         .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.6);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            backdrop-filter: blur(5px);
-         }
-      `}</style>
-
-
-      {/* Rest of the component remains same ... */}
-
-      <div className="company-layout">
-        {/* LEFT SIDEBAR (Stock List) */}
-        <div style={{ height: "calc(100vh - 100px)", position: "sticky", top: "20px" }}>
-          <StockSelector />
-        </div>
-
-        {/* RIGHT CONTENT */}
-        <div className="main-content">
-          <div className="header">
+        {/* RIGHT: CONTENT */}
+        <div className="h-full flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
+          {/* HEADER */}
+          <div className="flex justify-between items-end bg-[var(--bg-secondary)]/30 p-6 rounded-2xl border border-white/5 shadow-inner">
             <div>
-              <h1 className="stock-title">{symbol}</h1>
-              <div style={{ display: "flex", gap: "1rem", alignItems: "baseline" }}>
-                {displayPrice > 0 ? (
-                  <>
-                    <span className="stock-price">{currency}{displayPrice.toLocaleString()}</span>
-                    <span style={{ color: "var(--success)", fontSize: "1.1rem" }}>LIVE</span>
-                  </>
-                ) : (
-                  <span className="stock-price">Loading...</span>
-                )}
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-4xl font-black text-white tracking-tight uppercase">{symbol}</h1>
+                <div className="h-6 w-px bg-white/10 mx-1"></div>
+                <div className="flex items-center gap-2">
+                  <Badge type="info">NSE</Badge>
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-[10px] font-bold text-emerald-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    LIVE
+                  </div>
+                </div>
               </div>
-              <p style={{ color: "var(--text-secondary)", marginTop: "0.5rem" }}>
-                {marketInfo.name} • <span style={{ color: marketInfo.color }}>{marketInfo.status}</span>
-              </p>
+              <div className="flex items-baseline gap-4">
+                <span className="text-4xl font-mono font-bold text-white tracking-tighter">
+                  {currency}{displayPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+                <span className={`text-xl font-mono font-bold ${change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {change > 0 ? '▲' : '▼'} {Math.abs(change).toFixed(2)}%
+                </span>
+              </div>
+              <div className="text-slate-500 text-sm font-medium mt-1 uppercase tracking-wide">
+                {metrics ? metrics.Name : 'Fetching Asset Profile...'}
+              </div>
             </div>
 
-            <div>
-              <div style={{ display: "flex", gap: "1rem" }}>
-                <button
-                  className="action-btn"
-                  onClick={() => toggleTrade('BUY')}
-                  style={{
-                    background: "var(--success)",
-                    color: "white",
-                    border: "none",
-                    padding: "0.8rem 2rem",
-                    borderRadius: "8px",
-                    fontWeight: "600",
-                    fontSize: "1rem",
-                    cursor: "pointer",
-                    boxShadow: "0 4px 12px rgba(0, 255, 127, 0.3)",
-                    transition: "all 0.2s ease",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem"
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
-                  onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}
-                >
-                  <span>🚀</span> BUY
-                </button>
-                <button
-                  className="action-btn"
-                  onClick={() => toggleTrade('SELL')}
-                  style={{
-                    background: "var(--danger)",
-                    color: "white",
-                    border: "none",
-                    padding: "0.8rem 2rem",
-                    borderRadius: "8px",
-                    fontWeight: "600",
-                    fontSize: "1rem",
-                    cursor: "pointer",
-                    boxShadow: "0 4px 12px rgba(255, 99, 71, 0.3)",
-                    transition: "all 0.2s ease",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem"
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
-                  onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}
-                >
-                  <span>📉</span> SELL
-                </button>
-              </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => toggleTrade('BUY')}
+                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-1 flex items-center gap-2"
+              >
+                <span>🚀</span> BUY
+              </button>
+              <button
+                onClick={() => toggleTrade('SELL')}
+                className="px-6 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg shadow-lg shadow-red-500/20 transition-all hover:-translate-y-1 flex items-center gap-2"
+              >
+                <span>📉</span> SELL
+              </button>
             </div>
           </div>
 
-          <div className="details-grid">
-            {/* CHART */}
-            <div className="glass-card" style={{ padding: 0, overflow: 'hidden', height: "550px", position: "relative" }}>
-              <div style={{ padding: "1rem", borderBottom: "1px solid var(--glass-border)" }}>
-                <h3>Technical Chart</h3>
-              </div>
-              <div style={{ height: "calc(100% - 60px)", position: "relative" }}>
-                <CandlestickChart key={symbol} symbol={symbol} currentPrice={displayPrice} />
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+            {/* CHART & ABOUT */}
+            <div className="lg:col-span-2 flex flex-col gap-6">
+              <Card className="h-[600px] p-0 flex flex-col overflow-hidden shadow-2xl shadow-blue-500/5 ring-1 ring-white/10" title="Technical Analysis">
+                <div className="flex-1 w-full relative bg-[var(--bg-secondary)]">
+                  {/* Force remount with key when symbol changes */}
+                  <CandlestickChart key={symbol} symbol={symbol} currentPrice={displayPrice} />
+                </div>
+              </Card>
+
+              <Card title={`Company Profile`}>
+                <div className="flex flex-col gap-3">
+                  <h3 className="text-lg font-bold text-[var(--text-primary)]">{metrics?.Name || symbol}</h3>
+                  <p className="text-slate-400 leading-relaxed text-sm">
+                    {metrics ? metrics.Description : <Skeleton width="100%" height="60px" />}
+                  </p>
+                </div>
+              </Card>
             </div>
 
-            {/* FUNDAMENTALS */}
-            <div className="glass-card">
-              <h3 style={{ marginBottom: "1.5rem" }}>Fundamentals</h3>
-              {metrics ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
-                  <Row label="Company Name" value={metrics.Name} />
-                  <Row label="Sector" value={metrics.Sector} />
-                  <Row label="Market Cap" value={metrics.MarketCapitalization} />
-                  <Row label="P/E Ratio" value={metrics.PERatio} />
-                  <Row label="Dividend Yield" value={metrics.DividendYield} />
-                  <Row label="52W High" value={metrics["52WeekHigh"]} />
-                  <Row label="52W Low" value={metrics["52WeekLow"]} />
-                </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><Skeleton width="100px" height="20px" /><Skeleton width="150px" height="20px" /></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><Skeleton width="80px" height="20px" /><Skeleton width="120px" height="20px" /></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><Skeleton width="90px" height="20px" /><Skeleton width="100px" height="20px" /></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><Skeleton width="70px" height="20px" /><Skeleton width="80px" height="20px" /></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><Skeleton width="110px" height="20px" /><Skeleton width="90px" height="20px" /></div>
-                </div>
-              )}
+            {/* METRICS */}
+            <div className="flex flex-col gap-6">
+              <Card title="Market Statistics">
+                {metrics ? (
+                  <div className="space-y-1">
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 mt-2">Valuation</div>
+                    <FundamentalRow label="Market Cap" value={metrics.MarketCapitalization} />
+                    <FundamentalRow label="P/E Ratio" value={metrics.PERatio} />
+                    <FundamentalRow label="Dividend Yield" value={metrics.DividendYield} />
 
-              <div style={{ marginTop: "2rem", paddingTop: "2rem", borderTop: "1px solid var(--glass-border)" }}>
-                <h3>About {symbol}</h3>
-                <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: "1.6", marginTop: "1rem" }}>
-                  {metrics ? metrics.Description : "Loading company details..."}
-                </p>
-              </div>
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 mt-4">Price Action</div>
+                    <FundamentalRow label="52W High" value={metrics["52WeekHigh"]} />
+                    <FundamentalRow label="52W Low" value={metrics["52WeekLow"]} />
+                    <FundamentalRow label="Sector" value={metrics.Sector} />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <Skeleton height="20px" width="100%" />
+                    <Skeleton height="20px" width="100%" />
+                    <Skeleton height="20px" width="100%" />
+                    <Skeleton height="20px" width="100%" />
+                    <Skeleton height="20px" width="100%" />
+                  </div>
+                )}
+              </Card>
+
+              <Card title="Market Sentiment" className="flex-1">
+                <div className="h-full flex flex-col justify-center items-center gap-4">
+                  <div className="w-32 h-32 rounded-full border-4 border-slate-700 flex items-center justify-center relative">
+                    <span className="text-2xl font-bold text-white">Neutral</span>
+                    <div className="absolute top-0 left-0 w-full h-full border-4 border-blue-500 rounded-full border-t-transparent border-r-transparent animate-spin-slow"></div>
+                  </div>
+                  <p className="text-center text-xs text-slate-500">
+                    Based on technical indicators and news sentiment analysis.
+                  </p>
+                </div>
+              </Card>
             </div>
           </div>
         </div>
       </div>
 
-      {
-        showTradeModal && (
-          <div className="modal-overlay" onClick={() => setShowTradeModal(false)}>
-            <div className="glass-card animate-fade-in" onClick={e => e.stopPropagation()} style={{ width: "90%", maxWidth: "400px", position: "relative" }}>
-              <button
-                onClick={() => setShowTradeModal(false)}
-                style={{
-                  position: "absolute",
-                  right: "1rem",
-                  top: "1rem",
-                  background: "none",
-                  border: "none",
-                  color: "var(--text-secondary)",
-                  fontSize: "1.5rem",
-                  cursor: "pointer",
-                  zIndex: 10
-                }}
-              >
-                ✕
-              </button>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-                <h3 style={{ margin: 0, color: tradeType === 'BUY' ? 'var(--success)' : 'var(--danger)' }}>
-                  {tradeType} {symbol}
-                </h3>
-              </div>
-              <TradePanel symbol={symbol} initialType={tradeType} />
-            </div>
+      {showTradeModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-fade-in" onClick={() => setShowTradeModal(false)}>
+          <div className="glass-card w-full max-w-md relative" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setShowTradeModal(false)}
+              className="absolute right-4 top-4 text-slate-400 hover:text-white transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <h3 className={`text-xl font-bold mb-4 ${tradeType === 'BUY' ? 'text-emerald-400' : 'text-red-400'}`}>
+              {tradeType} {symbol}
+            </h3>
+            <TradePanel symbol={symbol} initialType={tradeType} />
           </div>
-        )
-      }
-    </div >
+        </div>
+      )}
+    </div>
   );
 }
-
-const Row = ({ label, value }) => (
-  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.95rem" }}>
-    <span style={{ color: "var(--text-secondary)" }}>{label}</span>
-    <span style={{ fontWeight: "600", maxWidth: "60%", textAlign: "right" }}>{value}</span>
-  </div>
-);

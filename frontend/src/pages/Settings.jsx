@@ -1,18 +1,19 @@
 import { useState, useContext } from "react";
 import { ThemeContext } from "../context/ThemeContext";
+import Card from "../components/Card";
+import Badge from "../components/Badge";
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("general");
-  const { dark, toggleTheme, currency, setCurrency } = useContext(ThemeContext);
+  const { currency, setCurrency } = useContext(ThemeContext); // Removed dark/toggleTheme as we are enforcing Dark Mode
 
-  // Local state for trading settings (simulated persistence)
+  // Local state for trading settings
   const [tradingSettings, setTradingSettings] = useState({
     defaultQuantity: 1,
     riskLimit: "5%",
     leverage: "1x",
     defaultOrderType: "MARKET",
     oneClickTrading: false,
-    chartTimeframe: "1D",
     notifications: {
       orderFill: true,
       priceAlerts: true,
@@ -37,316 +38,214 @@ export default function Settings() {
     }));
   };
 
+  const tabs = [
+    { id: 'general', label: 'General', icon: '⚙️' },
+    { id: 'account', label: 'Account', icon: '👤' },
+    { id: 'trading', label: 'Trading Preferences', icon: '📈' },
+  ];
+
   return (
-    <div>
-      <h1 style={{ marginBottom: "1.5rem" }}>⚙️ Settings</h1>
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem", borderBottom: "1px solid var(--glass-border)" }}>
-        {["General", "Account", "Trading"].map((tab) => {
-          const key = tab.toLowerCase();
-          return (
-            <button
-              key={key}
-              onClick={() => setActiveTab(key)}
-              style={{
-                background: "transparent",
-                border: "none",
-                borderBottom: activeTab === key ? "2px solid var(--accent-color)" : "2px solid transparent",
-                color: activeTab === key ? "var(--text-primary)" : "var(--text-secondary)",
-                padding: "0.5rem 1rem",
-                fontSize: "1rem",
-                cursor: "pointer",
-                fontWeight: activeTab === key ? 600 : 400
-              }}
-            >
-              {tab}
-            </button>
-          );
-        })}
+    <div className="p-6 max-w-[1000px] mx-auto min-h-screen">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
+        <p className="text-slate-400">Manage your workspace and preferences.</p>
       </div>
 
-      <div className="glass-card animate-fade-in" style={{ maxWidth: "600px" }}>
-        {activeTab === "general" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <h3>Theme</h3>
-                <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Current: {dark ? "Dark 🌙" : "Light ☀️"}</p>
-              </div>
-              <button
-                className="btn-primary"
-                onClick={toggleTheme}
-              >
-                Toggle Theme
-              </button>
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-8">
+        {/* Sidebar Navigation */}
+        <div className="flex flex-col gap-2">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id
+                  ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-lg shadow-blue-500/10'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+                }`}
+            >
+              <span>{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <h3>Currency</h3>
-                <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Display currency for portfolio</p>
-              </div>
-              <select
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                style={{
-                  padding: "8px",
-                  borderRadius: "6px",
-                  background: "var(--bg-secondary)",
-                  color: "white",
-                  border: "1px solid var(--glass-border)"
-                }}
-              >
-                <option value="INR">INR (₹)</option>
-                <option value="USD">USD ($)</option>
-              </select>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "account" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-
-            {/* Profile Header */}
-            <div className="glass-card" style={{ display: "flex", alignItems: "center", gap: "1.5rem", padding: "2rem" }}>
-              <div style={{
-                width: "80px",
-                height: "80px",
-                borderRadius: "50%",
-                background: "linear-gradient(135deg, var(--accent-color), #2a2a2a)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "2.5rem",
-                boxShadow: "0 8px 20px rgba(0,0,0,0.3)"
-              }}>
-                👤
-              </div>
-              <div>
-                <h2 style={{ margin: 0, fontSize: "1.8rem" }}>{JSON.parse(localStorage.getItem("user"))?.name || "Trader"}</h2>
-                <div style={{ display: "flex", gap: "0.8rem", marginTop: "0.5rem" }}>
-                  <span className="badge" style={{ background: "var(--success)", color: "white", padding: "2px 8px", borderRadius: "4px", fontSize: "0.8rem" }}>Active</span>
-                  <span className="badge" style={{ background: "var(--accent-color)", color: "white", padding: "2px 8px", borderRadius: "4px", fontSize: "0.8rem" }}>Pro Plan</span>
+        {/* Content Area */}
+        <div className="animate-fade-in">
+          {activeTab === "general" && (
+            <div className="space-y-6">
+              <Card title="Display Settings">
+                <div className="flex justify-between items-center py-4 border-b border-white/5 last:border-0">
+                  <div>
+                    <h4 className="text-white font-medium">Theme Mode</h4>
+                    <p className="text-sm text-slate-500">System appearance</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge type="info">Dark Mode Only</Badge>
+                  </div>
                 </div>
-              </div>
+
+                <div className="flex justify-between items-center py-4 border-b border-white/5 last:border-0">
+                  <div>
+                    <h4 className="text-white font-medium">Base Currency</h4>
+                    <p className="text-sm text-slate-500">Portfolio valuation currency</p>
+                  </div>
+                  <select
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value)}
+                    className="bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm outline-none focus:border-blue-500"
+                  >
+                    <option value="INR">INR (₹)</option>
+                    <option value="USD">USD ($)</option>
+                  </select>
+                </div>
+              </Card>
             </div>
+          )}
 
-            {/* Account Details Grid */}
-            <div className="glass-card">
-              <h3 style={{ marginBottom: "1.5rem", borderBottom: "1px solid var(--glass-border)", paddingBottom: "1rem" }}>Account Details</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
-                <DetailItem label="Account ID" value={`#TRD-${Math.floor(Math.random() * 100000) + 10000}`} />
-                <DetailItem label="Email" value={JSON.parse(localStorage.getItem("user"))?.email || "user@tradeverse.com"} />
-                <DetailItem label="Account Type" value="Paper Trading / Demo" />
-                <DetailItem label="Member Since" value={new Date().toLocaleDateString()} />
-                <DetailItem label="Base Currency" value={currency} />
-                <DetailItem label="Region" value={currency === "INR" ? "India (NSE)" : "USA (NYSE/NASDAQ)"} />
-              </div>
-            </div>
-
-            {/* Danger Zone */}
-            <div className="glass-card" style={{ border: "1px solid var(--danger)" }}>
-              <h3 style={{ color: "var(--danger)", marginBottom: "1rem" }}>Danger Zone</h3>
-              <p style={{ color: "var(--text-secondary)", marginBottom: "1.5rem", fontSize: "0.9rem" }}>
-                Resetting your account will wipe all transaction history and portfolio data. This action cannot be undone.
-              </p>
-              <button
-                className="btn-danger"
-                style={{ width: "fit-content" }}
-                onClick={() => {
-                  if (confirm("Are you sure you want to reset all paper trading data? This action is irreversible.")) {
-                    localStorage.removeItem('portfolio'); // Example toggle
-                    alert("Account reset successfully. (Simulated)");
-                  }
-                }}
-              >
-                Reset Account Data
-              </button>
-            </div>
-
-          </div>
-        )}
-
-        {activeTab === "trading" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-
-            {/* Order Settings */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-              <div>
-                <h3>Default Quantity</h3>
-                <input
-                  type="number"
-                  value={tradingSettings.defaultQuantity}
-                  onChange={(e) => handleTradingChange("defaultQuantity", e.target.value)}
-                  style={{
-                    marginTop: "0.5rem",
-                    padding: "10px",
-                    width: "100%",
-                    background: "rgba(0,0,0,0.2)",
-                    border: "1px solid var(--glass-border)",
-                    color: "white",
-                    borderRadius: "6px"
-                  }}
-                />
-              </div>
-              <div>
-                <h3>Default Leverage</h3>
-                <select
-                  value={tradingSettings.leverage}
-                  onChange={(e) => handleTradingChange("leverage", e.target.value)}
-                  style={{
-                    marginTop: "0.5rem",
-                    padding: "10px",
-                    width: "100%",
-                    background: "var(--bg-secondary)",
-                    border: "1px solid var(--glass-border)",
-                    color: "white",
-                    borderRadius: "6px"
-                  }}
-                >
-                  <option value="1x">1x (Cash)</option>
-                  <option value="2x">2x (Margin)</option>
-                  <option value="5x">5x (Intraday)</option>
-                  <option value="10x">10x (Pro)</option>
-                </select>
-              </div>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-              <div>
-                <h3>Risk Limit (Stop Loss)</h3>
-                <input
-                  type="text"
-                  value={tradingSettings.riskLimit}
-                  onChange={(e) => handleTradingChange("riskLimit", e.target.value)}
-                  style={{
-                    marginTop: "0.5rem",
-                    padding: "10px",
-                    width: "100%",
-                    background: "rgba(0,0,0,0.2)",
-                    border: "1px solid var(--glass-border)",
-                    color: "white",
-                    borderRadius: "6px"
-                  }}
-                />
-              </div>
-              <div>
-                <h3>Default Order Type</h3>
-                <select
-                  value={tradingSettings.defaultOrderType}
-                  onChange={(e) => handleTradingChange("defaultOrderType", e.target.value)}
-                  style={{
-                    marginTop: "0.5rem",
-                    padding: "10px",
-                    width: "100%",
-                    background: "var(--bg-secondary)",
-                    border: "1px solid var(--glass-border)",
-                    color: "white",
-                    borderRadius: "6px"
-                  }}
-                >
-                  <option value="MARKET">Market</option>
-                  <option value="LIMIT">Limit</option>
-                  <option value="STOP">Stop Loss</option>
-                </select>
-              </div>
-            </div>
-
-            <div style={{ borderTop: "1px solid var(--glass-border)", paddingTop: "1rem" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+          {activeTab === "account" && (
+            <div className="space-y-6">
+              <Card className="flex items-center gap-6">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-3xl shadow-lg ring-4 ring-white/5">
+                  👤
+                </div>
                 <div>
-                  <h3>One-Click Trading</h3>
-                  <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Execute orders immediately without confirmation</p>
+                  <h2 className="text-2xl font-bold text-white">{JSON.parse(localStorage.getItem("user"))?.name || "Trader"}</h2>
+                  <div className="flex gap-2 mt-2">
+                    <Badge type="success">Active</Badge>
+                    <Badge type="info">Pro Plan</Badge>
+                  </div>
                 </div>
-                <label className="switch">
-                  <input
-                    type="checkbox"
-                    checked={tradingSettings.oneClickTrading}
-                    onChange={(e) => handleTradingChange("oneClickTrading", e.target.checked)}
-                  />
-                  <span className="slider round"></span>
-                </label>
+              </Card>
+
+              <Card title="Account Details">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <DetailItem label="Account ID" value={`#TRD-${Math.floor(Math.random() * 100000) + 10000}`} />
+                  <DetailItem label="Email" value={JSON.parse(localStorage.getItem("user"))?.email || "user@tradeverse.com"} />
+                  <DetailItem label="Account Type" value="Paper Trading / Demo" />
+                  <DetailItem label="Member Since" value={new Date().toLocaleDateString()} />
+                  <DetailItem label="Region" value={currency === "INR" ? "India (NSE)" : "USA (NYSE/NASDAQ)"} />
+                </div>
+              </Card>
+
+              <div className="border border-red-500/20 bg-red-500/5 rounded-xl p-6">
+                <h3 className="text-red-400 font-bold mb-2">Danger Zone</h3>
+                <p className="text-slate-400 text-sm mb-4">
+                  Resetting your account will wipe all transaction history and portfolio data.
+                </p>
+                <button
+                  className="px-4 py-2 border border-red-500 text-red-500 rounded-lg text-sm font-medium hover:bg-red-500 hover:text-white transition-colors"
+                  onClick={() => {
+                    if (confirm("Are you sure you want to reset all paper trading data? This action is irreversible.")) {
+                      localStorage.removeItem('portfolio');
+                      alert("Account reset successfully. (Simulated)");
+                    }
+                  }}
+                >
+                  Reset Account Data
+                </button>
               </div>
             </div>
+          )}
 
-            {/* Notifications */}
-            <div style={{ borderTop: "1px solid var(--glass-border)", paddingTop: "1rem" }}>
-              <h3 style={{ marginBottom: "1rem" }}>Notifications</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
-                {[
-                  { id: 'orderFill', label: 'Order Fills & Executions' },
-                  { id: 'priceAlerts', label: 'Price Alerts' },
-                  { id: 'news', label: 'Major Market News' }
-                ].map(item => (
-                  <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {activeTab === "trading" && (
+            <div className="space-y-6">
+              <Card title="Order Configuration">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">Default Quantity</label>
+                    <input
+                      type="number"
+                      value={tradingSettings.defaultQuantity}
+                      onChange={(e) => handleTradingChange("defaultQuantity", e.target.value)}
+                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">Default Leverage</label>
+                    <select
+                      value={tradingSettings.leverage}
+                      onChange={(e) => handleTradingChange("leverage", e.target.value)}
+                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-blue-500"
+                    >
+                      <option value="1x">1x (Cash)</option>
+                      <option value="2x">2x (Margin)</option>
+                      <option value="5x">5x (Intraday)</option>
+                      <option value="10x">10x (Pro)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">Risk Limit (Stop Loss)</label>
+                    <input
+                      type="text"
+                      value={tradingSettings.riskLimit}
+                      onChange={(e) => handleTradingChange("riskLimit", e.target.value)}
+                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">Default Order Type</label>
+                    <select
+                      value={tradingSettings.defaultOrderType}
+                      onChange={(e) => handleTradingChange("defaultOrderType", e.target.value)}
+                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-blue-500"
+                    >
+                      <option value="MARKET">Market</option>
+                      <option value="LIMIT">Limit</option>
+                      <option value="STOP">Stop Loss</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center pt-6 mt-6 border-t border-white/5">
+                  <div>
+                    <div className="text-white font-medium">One-Click Trading</div>
+                    <div className="text-sm text-slate-500">Execute without confirmation</div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={tradingSettings.notifications[item.id]}
-                      onChange={() => handleNotificationChange(item.id)}
-                      style={{ accentColor: "var(--accent-color)", width: "16px", height: "16px" }}
+                      className="sr-only peer"
+                      checked={tradingSettings.oneClickTrading}
+                      onChange={(e) => handleTradingChange("oneClickTrading", e.target.checked)}
                     />
-                    <span style={{ color: "var(--text-secondary)" }}>{item.label}</span>
-                  </div>
-                ))}
-              </div>
+                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+              </Card>
+
+              <Card title="Notifications">
+                <div className="space-y-4">
+                  {[
+                    { id: 'orderFill', label: 'Order Fills & Executions', desc: 'Get notified when your order is placed.' },
+                    { id: 'priceAlerts', label: 'Price Alerts', desc: 'Alerts when price hits your target.' },
+                    { id: 'news', label: 'Major Market News', desc: 'Breaking news impacting your portfolio.' }
+                  ].map(item => (
+                    <div key={item.id} className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={tradingSettings.notifications[item.id]}
+                        onChange={() => handleNotificationChange(item.id)}
+                        className="mt-1 w-4 h-4 accent-blue-600 bg-slate-900 border-white/10 rounded"
+                      />
+                      <div>
+                        <div className="text-white font-medium text-sm">{item.label}</div>
+                        <div className="text-slate-500 text-xs">{item.desc}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
             </div>
-
-          </div>
-        )}
+          )}
+        </div>
       </div>
-
-      <style>{`
-        .switch {
-          position: relative;
-          display: inline-block;
-          width: 50px;
-          height: 24px;
-        }
-
-        .switch input { 
-          opacity: 0;
-          width: 0;
-          height: 0;
-        }
-
-        .slider {
-          position: absolute;
-          cursor: pointer;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-color: #ccc;
-          transition: .4s;
-          border-radius: 34px;
-        }
-
-        .slider:before {
-          position: absolute;
-          content: "";
-          height: 16px;
-          width: 16px;
-          left: 4px;
-          bottom: 4px;
-          background-color: white;
-          transition: .4s;
-          border-radius: 50%;
-        }
-
-        input:checked + .slider {
-          background-color: var(--accent-color);
-        }
-
-        input:checked + .slider:before {
-          transform: translateX(26px);
-        }
-      `}</style>
-    </div >
+    </div>
   );
 }
 
 const DetailItem = ({ label, value }) => (
   <div>
-    <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginBottom: "0.3rem" }}>{label}</p>
-    <p style={{ fontWeight: "600", fontSize: "1.05rem" }}>{value}</p>
+    <p className="text-slate-500 text-xs uppercase tracking-wide mb-1">{label}</p>
+    <p className="text-white font-medium text-lg font-mono">{value}</p>
   </div>
 );

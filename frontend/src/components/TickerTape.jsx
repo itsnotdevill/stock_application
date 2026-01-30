@@ -1,8 +1,4 @@
-import { useEffect, useState } from "react";
-
 export default function TickerTape() {
-  // Mock data for indices - in a real app this would come from an API
-  // Intentionally mixed positive and negative for realism
   const indices = [
     { symbol: "S&P 500", price: "4,783.45", change: "+0.54%" },
     { symbol: "NASDAQ", price: "15,123.88", change: "+0.82%" },
@@ -18,76 +14,31 @@ export default function TickerTape() {
   ];
 
   return (
-    <div className="ticker-container">
-      <style>{`
-        .ticker-container {
-          width: 100%;
-          height: 36px;
-          background: rgba(11, 15, 25, 0.6);
-          backdrop-filter: blur(5px);
-          border-bottom: 1px solid rgba(255,255,255,0.05);
-          overflow: hidden;
-          display: flex;
-          align-items: center;
-          position: relative;
-          z-index: 50;
-        }
-
-        .ticker-track {
-          display: flex;
-          animation: tickerScroll 30s linear infinite;
-          white-space: nowrap;
-        }
-
-        .ticker-item {
-          display: flex;
-          align-items: center;
-          margin-right: 48px;
-          font-size: 0.85rem;
-          font-weight: 500;
-          color: var(--text-secondary);
-        }
-
-        .ticker-symbol {
-          margin-right: 8px;
-          color: var(--text-primary);
-          font-weight: 700;
-          opacity: 0.9;
-        }
-
-        .ticker-change.positive {
-          color: var(--success);
-          text-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
-        }
-
-        .ticker-change.negative {
-          color: var(--danger);
-          text-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
-        }
-
-        @keyframes tickerScroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-
-        /* Pause on hover for readability */
-        .ticker-container:hover .ticker-track {
-          animation-play-state: paused;
-        }
-      `}</style>
-
-      {/* Duplicated content to ensure seamless loop */}
-      <div className="ticker-track">
+    <div className="h-10 bg-[var(--bg-primary)] border-b border-[var(--text-muted)]/10 overflow-hidden flex items-center relative z-50">
+      <div className="flex animate-marquee whitespace-nowrap gap-12 px-4">
         {[...indices, ...indices, ...indices].map((item, index) => (
-          <div key={index} className="ticker-item">
-            <span className="ticker-symbol">{item.symbol}</span>
-            <span style={{ marginRight: "8px" }}>{item.price}</span>
-            <span className={`ticker-change ${item.change.startsWith("+") ? "positive" : "negative"}`}>
+          <div key={index} className="flex items-center gap-3 text-xs font-medium">
+            <span className="text-[var(--text-primary)] font-bold tracking-wide">{item.symbol}</span>
+            <span className="text-[var(--text-secondary)]">{item.price}</span>
+            <span className={item.change.startsWith("+") ? "text-emerald-500" : "text-red-500"}>
               {item.change.startsWith("+") ? "▲" : "▼"} {item.change}
             </span>
           </div>
         ))}
       </div>
+      <style>{`
+        .animate-marquee {
+          animation: marquee 40s linear infinite;
+        }
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        /* Pause on hover */
+        .animate-marquee:hover {
+            animation-play-state: paused;
+        }
+      `}</style>
     </div>
   );
 }

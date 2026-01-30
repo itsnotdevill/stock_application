@@ -48,40 +48,46 @@ Featuring a futuristic dark/light mode UI with **Glassmorphism aesthetics**, **A
 
 ## 📸 Project Screenshots
 
-### Authentication
-![Login Page](stock%20trading%20web%20application%20ss/Login%20Page%20%28Dark%29.png)
-![Sign Up Page](stock%20trading%20web%20application%20ss/Sign%20Up%20Page%20%28Dark%29.png)
+### 🔐 Authentication & Access
+![Login](stock%20trading%20web%20application%20ss/Login%20.png)
+![Sign Up](stock%20trading%20web%20application%20ss/Sign%20Up.png)
 
-### Admin Dashboard
-![Admin Dashboard](stock%20trading%20web%20application%20ss/Admin%20Dashboard%20%28Dark%29.png)
-![Admin User Details](stock%20trading%20web%20application%20ss/Admin%20Dashboard%20User%20Data%20.png)
+### 📈 Trading Intelligence
+![Dashboard 01](stock%20trading%20web%20application%20ss/Dashboard%2001%20.png)
+![Dashboard 02](stock%20trading%20web%20application%20ss/Dashboard%2002.png)
+![Watchlist](stock%20trading%20web%20application%20ss/Watchlist%20.png)
 
-### Dashboard & Watchlist
-![Dashboard](stock%20trading%20web%20application%20ss/Dashboard%20%28Dark%29.png)
-![Watchlist](stock%20trading%20web%20application%20ss/Watchlist%20%28Dark%29.png)
+### 📊 Advanced Charts & Analysis
+![Charts IND](stock%20trading%20web%20application%20ss/Charts%20IND%20.png)
+![Charts USA](stock%20trading%20web%20application%20ss/Charts%20USA.png)
+![Company IND 01](stock%20trading%20web%20application%20ss/Company%20IND%2001.png)
+![Company IND 02](stock%20trading%20web%20application%20ss/Company%20IND%2002.png)
+![Company USA 01](stock%20trading%20web%20application%20ss/Company%20USA%2001.png)
+![Company USA 02](stock%20trading%20web%20application%20ss/Company%20USA%2002.png)
 
-### Company & Market Analysis
-![Charts IND](stock%20trading%20web%20application%20ss/Charts%20IND%20%28Dark%29.png)
-![Charts USA](stock%20trading%20web%20application%20ss/Charts%20USA%20%28Dark%29.png)
-![Company Info IND 01](stock%20trading%20web%20application%20ss/Company%20Info%20%5BIND%5D%2001%20%28Dark%29.png)
-![Company Info IND 02](stock%20trading%20web%20application%20ss/Company%20Info%20%5BIND%5D%2002%20%28Dark%29.png)
-![Company Info USA 01](stock%20trading%20web%20application%20ss/Company%20Info%20%5BUSA%5D%2001%20%28Dark%29.png)
-![Company Info USA 02](stock%20trading%20web%20application%20ss/Company%20Info%20%5BUSA%5D%2002%20%28Dark%29.png)
+### 💼 Portfolio & Performance
+![Portfolio 01](stock%20trading%20web%20application%20ss/Portfolio%2001.png)
+![Portfolio 02](stock%20trading%20web%20application%20ss/Portfolio%2002.png)
+![Reports Performance](stock%20trading%20web%20application%20ss/Reports%20(Performance).png)
+![Reports Journal](stock%20trading%20web%20application%20ss/Reports%20(Journal).png)
 
-### Portfolio & Reports
-![Portfolio 01](stock%20trading%20web%20application%20ss/Portfolio%2001%20%28Dark%29.png)
-![Portfolio 02](stock%20trading%20web%20application%20ss/Portfolio%2002%20%28Dark%29.png)
-![Reports Performance](stock%20trading%20web%20application%20ss/Reports%20%5BPerformance%5D%20%28Dark%29.png)
-![Reports Skills](stock%20trading%20web%20application%20ss/Reports%20%5BSkills%5D%20%28Dark%29.png)
-![Reports Journal](stock%20trading%20web%20application%20ss/Reports%20%5BJournal%5D%20%28Dark%29.png)
-![Reports Learn 01](stock%20trading%20web%20application%20ss/Reports%20%5BLearn%2001%5D%20%28Dark%29.png)
-![Reports Learn 02](stock%20trading%20web%20application%20ss/Reports%20%5BLearn%2002%5D%20%28Dark%29.png)
+### 🎓 Learning & Progress
+![Reports Academy](stock%20trading%20web%20application%20ss/Reports%20(Academy).png)
+![Reports Academy 02](stock%20trading%20web%20application%20ss/Reports%20(Academy)%2002.png)
+![Reports Skill Progress](stock%20trading%20web%20application%20ss/Reports%20(Skill%20Progress).png)
 
-### Settings
-![Settings General](stock%20trading%20web%20application%20ss/Settings%20%5BGeneral%5D%20%28Dark%29.png)
-![Settings Account 01](stock%20trading%20web%20application%20ss/Settings%20%5BAccount%5D%2001%20%28Dark%29.png)
-![Settings Account 02](stock%20trading%20web%20application%20ss/Settings%20%5BAccount%5D%2002%20%28Dark%29.png)
-![Settings Trading](stock%20trading%20web%20application%20ss/Settings%20%5BTrading%5D%20%28Dark%29.png)
+### 🛠️ Admin Control Center
+![Admin Dashboard](stock%20trading%20web%20application%20ss/Admin%20Dashboard.png)
+![Admin User Data 01](stock%20trading%20web%20application%20ss/Admin%20Dashboard%20(User%20Data).png)
+![Admin User Data 02](stock%20trading%20web%20application%20ss/Admin%20Dashboard%20(User%20Data)%2002.png)
+
+### ⚙️ System Settings
+![Settings General](stock%20trading%20web%20application%20ss/Settings%20(General).png)
+![Settings Account](stock%20trading%20web%20application%20ss/Settings%20(Account).png)
+![Settings Trading](stock%20trading%20web%20application%20ss/Settings%20(Trading%20Preference).png)
+
+### 🤖 AI TradeBot
+![TradeBot](stock%20trading%20web%20application%20ss/TradeVerse%20TradeBot%20Ai.png)
 
 ---
 

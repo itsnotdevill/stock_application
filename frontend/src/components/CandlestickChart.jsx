@@ -15,46 +15,64 @@ export default function CandlestickChart({ symbol = "RELIANCE", currentPrice = 0
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: '#94a3b8',
+        fontFamily: "'Inter', sans-serif",
       },
       grid: {
-        vertLines: { color: 'rgba(255, 255, 255, 0.1)' },
-        horzLines: { color: 'rgba(255, 255, 255, 0.1)' },
+        vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
+        horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
       },
-      width: chartContainerRef.current.clientWidth,
-      height: chartContainerRef.current.clientHeight,
+      width: chartContainerRef.current.clientWidth || 600,
+      height: chartContainerRef.current.clientHeight || 400,
       timeScale: {
         timeVisible: true,
         secondsVisible: false,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        fixLeftEdge: true,
+      },
+      rightPriceScale: {
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        scaleMargins: {
+          top: 0.1,
+          bottom: 0.1,
+        },
       },
       crosshair: {
-        mode: 1 // CrosshairMode.Normal
+        mode: 1, // CrosshairMode.Normal
+        vertLine: {
+          color: 'rgba(59, 130, 246, 0.5)',
+          width: 1,
+          style: 3,
+        },
+        horzLine: {
+          color: 'rgba(59, 130, 246, 0.5)',
+          width: 1,
+          style: 3,
+        },
       }
     });
 
     const candlestickSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#22c55e',
+      upColor: '#10b981',
       downColor: '#ef4444',
       borderVisible: false,
-      wickUpColor: '#22c55e',
+      wickUpColor: '#10b981',
       wickDownColor: '#ef4444',
     });
 
     setSeries(candlestickSeries);
     setChartInstance(chart);
 
-    const handleResize = () => {
-      if (chartContainerRef.current) {
-        chart.applyOptions({
-          width: chartContainerRef.current.clientWidth,
-          height: chartContainerRef.current.clientHeight
-        });
-      }
-    };
+    // Robust Resize handling with ResizeObserver
+    const resizeObserver = new ResizeObserver(entries => {
+      if (entries.length === 0 || !entries[0].contentRect) return;
+      const { width, height } = entries[0].contentRect;
+      chart.applyOptions({ width, height });
+    });
 
-    window.addEventListener('resize', handleResize);
+    resizeObserver.observe(chartContainerRef.current);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
       chart.remove();
     };
   }, []);
@@ -67,16 +85,17 @@ export default function CandlestickChart({ symbol = "RELIANCE", currentPrice = 0
       // Unique seed based on symbol string
       const seed = symbol.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
 
-      let data = [];
-      const initialTime = Math.floor(Date.now() / 1000) - (100 * 24 * 60 * 60); // 100 days ago
+      // Align to midnight UTC to prevent minor second mismatches
+      const initialTime = Math.floor(Date.now() / 1000) - (100 * 24 * 60 * 60);
+      const midnightTime = initialTime - (initialTime % 86400);
 
-      // Generate a random walk first
-      let price = 100; // Arbitrary start
+
+      let price = 100;
       let rawData = [];
 
       for (let i = 0; i < 100; i++) {
-        const volatility = (seed % 15) + (Math.random() * 5) + 5; // Variation per stock
-        const trend = Math.sin(i / 10 + seed) * (seed % 5); // Cyclic trend
+        const volatility = (seed % 15) + (Math.random() * 5) + 5;
+        const trend = Math.sin(i / 10 + seed) * (seed % 5);
         const change = (Math.random() - 0.5) * volatility + trend;
 
         const open = price;
@@ -84,23 +103,20 @@ export default function CandlestickChart({ symbol = "RELIANCE", currentPrice = 0
         const high = Math.max(open, close) + Math.abs(Math.random() * volatility * 0.5);
         const low = Math.min(open, close) - Math.abs(Math.random() * volatility * 0.5);
 
-        rawData.push({
-          time: initialTime + i * 24 * 60 * 60,
-          open, high, low, close
-        });
+        // Ensure purely ascending daily timestamps
+        const time = midnightTime + i * 24 * 60 * 60;
+
+        rawData.push({ time: time, open, high, low, close });
         price = close;
       }
 
-      // Calculate Shift Factor
-      // If we have a target price (live price), we shift the entire chart so the last close matches it.
-      // If targetPrice is 0 (loading), we just leave it (or default to 1000).
+      // Calculate Shift
       const lastGeneratedClose = rawData[rawData.length - 1].close;
-      const finalTarget = targetPrice > 0 ? targetPrice : (seed % 2000) + 100;
+      const finalTarget = Number(targetPrice) > 0 ? Number(targetPrice) : (seed % 2000) + 100;
       const shift = finalTarget - lastGeneratedClose;
 
-      // Apply shift
       const adjustedData = rawData.map(d => ({
-        ...d,
+        time: d.time, // Explicitly keep time
         open: d.open + shift,
         high: d.high + shift,
         low: d.low + shift,
@@ -112,32 +128,21 @@ export default function CandlestickChart({ symbol = "RELIANCE", currentPrice = 0
 
     // If we have a real API, use it. Otherwise use the "Smart Mock"
     const fetchData = async () => {
-      const apiKey = import.meta.env.VITE_ALPHA_VANTAGE_API_KEY;
-
-      // Try Real API first if key exists
-      if (apiKey && apiKey.length > 5 && !apiKey.startsWith('sk-')) {
-        try {
-          // ... existing API logic ...
-          // Omitted for brevity since user specifically complained about mismatches which implies 
-          // we are relying on mock or the API is failing/lagging. 
-          // Let's force the Smart Mock for now as it guarantees consistency which is the user's request.
-          // If the user wants real historical data, we can re-enable, but ensuring the LAST candle aligns with 
-          // LIVE socket price is tricky with free APIs that have delay.
-          // Best user experience: High quality mock that ALIGNS.
-        } catch (e) { }
-      }
-
-      // Use Smart Mock that aligns with currentPrice
       const data = generateMockData(currentPrice);
-      series.setData(data);
-      chartInstance.timeScale().fitContent();
-      setLastCandle(data[data.length - 1]);
+      try {
+        if (series) {
+          series.setData(data);
+          chartInstance.timeScale().fitContent();
+          setLastCandle(data[data.length - 1]);
+        }
+      } catch (err) {
+        console.warn("Chart data error", err);
+      }
     };
 
     fetchData();
   }, [symbol, series, chartInstance, currentPrice > 0]);
-  // Dependency includes `currentPrice > 0` to trigger re-generation once we get the first real price, 
-  // effectively "snapping" the chart to the right level.
+
 
   // 3. Update Last Candle with Live Price (Real-time updates)
   const lastCandleRef = useRef(null);
@@ -151,18 +156,28 @@ export default function CandlestickChart({ symbol = "RELIANCE", currentPrice = 0
 
     const currentCandle = lastCandleRef.current;
 
+    // Ensure clean numbers
+    const priceNum = Number(currentPrice);
+    if (isNaN(priceNum)) return;
+
     // Only update if price changed significantly or is new
-    if (Math.abs(currentCandle.close - currentPrice) < 0.01) return;
+    if (Math.abs(currentCandle.close - priceNum) < 0.001) return;
 
     const updatedCandle = {
       ...currentCandle,
-      close: currentPrice,
-      high: Math.max(currentCandle.high, currentPrice),
-      low: Math.min(currentCandle.low, currentPrice)
+      close: priceNum,
+      high: Math.max(currentCandle.high, priceNum),
+      low: Math.min(currentCandle.low, priceNum)
     };
 
-    lastCandleRef.current = updatedCandle;
-    series.update(updatedCandle);
+    try {
+      series.update(updatedCandle);
+      lastCandleRef.current = updatedCandle;
+    } catch (err) {
+      // Ignore update errors usually caused by strict ordering during init
+      console.warn("Chart update skipped", err);
+    }
+
   }, [currentPrice, series]);
 
   return (

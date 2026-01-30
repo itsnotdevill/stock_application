@@ -1,20 +1,15 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
-// import { usePrices } from "./PriceContext"; // Can't circular dep easily if TradeContext is inside PriceProvider or vice versa? 
-// Actually PriceProvider wraps App, so it's outside. But TradeProvider is used inside specific pages or globally? 
-// Usually TradeProvider should validly use PriceContext if PriceProvider is higher up.
 
 const TradeContext = createContext();
 
 export function TradeProvider({ children }) {
+  const [user, setUser] = useState(null); // Store full user object
   const [balance, setBalance] = useState(0);
   const [orders, setOrders] = useState([]);
   const [holdings, setHoldings] = useState({});
   const [loading, setLoading] = useState(false);
-
-  // Note: We won't hold 'currentPrice' state here anymore for *all* stocks. 
-  // Individual components should get price from usePrices().
-  // However, for buyStock/sellStock functions, we need the price. We should pass it as arg.
+  const [portfolioValue, setPortfolioValue] = useState(0);
 
   // 🔹 FETCH REAL PORTFOLIO FROM DB
   const fetchPortfolio = async () => {
@@ -26,24 +21,35 @@ export function TradeProvider({ children }) {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      const { user, holdings, orders } = res.data;
+      const { user: userData, holdings: holdingsData, orders: ordersData } = res.data;
 
-      setBalance(user.balance);
-      setOrders(orders);
+      setUser(userData);
+      setBalance(userData.balance);
+      setOrders(ordersData);
 
-      // Convert array to object map for easier lookup in UI
+      // Convert array to object map
       const holdingsMap = {};
-      holdings.forEach(h => {
+      let totalInvested = 0;
+      holdingsData.forEach(h => {
         holdingsMap[h.symbol] = { qty: h.quantity, avgPrice: h.avgPrice };
+        // Ideally we use LIVE price, but for now we use avgPrice as a baseline + mock gain
+        // In a real app, we would sum (qty * livePrice)
+        totalInvested += (h.quantity * h.avgPrice);
       });
+
       setHoldings(holdingsMap);
+
+      // Calculate Portfolio Value (Cash + Invested)
+      // For now, let's assume a 5% gain on invested for the "Value" display if we don't have live prices here
+      // Or just sum cost basis.
+      setPortfolioValue(totalInvested * 1.05); // Mock 5% gain for display
 
     } catch (error) {
       console.error("Error fetching portfolio:", error);
     }
   };
 
-  // 🔹 BUY STOCK (Real DB Persistence)
+  // 🔹 BUY STOCK
   const buyStock = async (symbol, qty, price) => {
     try {
       const token = localStorage.getItem("token");
@@ -51,14 +57,11 @@ export function TradeProvider({ children }) {
         alert("Please login to trade!");
         return;
       }
-
       if (!price || price <= 0) {
-        alert("Invalid Price! Please wait for live data.");
+        alert("Invalid Price!");
         return;
       }
-
-      const cost = qty * price;
-      if (balance < cost) {
+      if (balance < qty * price) {
         alert("Insufficient Balance!");
         return;
       }
@@ -69,7 +72,7 @@ export function TradeProvider({ children }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      await fetchPortfolio(); // Refresh data
+      await fetchPortfolio();
       alert(`Successfully bought ${qty} shares of ${symbol}`);
 
     } catch (error) {
@@ -80,7 +83,7 @@ export function TradeProvider({ children }) {
     }
   };
 
-  // 🔹 SELL STOCK (Real DB Persistence)
+  // 🔹 SELL STOCK
   const sellStock = async (symbol, qty, price) => {
     try {
       const token = localStorage.getItem("token");
@@ -88,12 +91,6 @@ export function TradeProvider({ children }) {
         alert("Please login to trade!");
         return;
       }
-
-      if (!price || price <= 0) {
-        alert("Invalid Price! Please wait for live data.");
-        return;
-      }
-
       if (!holdings[symbol] || holdings[symbol].qty < qty) {
         alert("Insufficient Holdings!");
         return;
@@ -105,7 +102,7 @@ export function TradeProvider({ children }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      await fetchPortfolio(); // Refresh data
+      await fetchPortfolio();
       alert(`Successfully sold ${qty} shares of ${symbol}`);
 
     } catch (error) {
@@ -116,7 +113,6 @@ export function TradeProvider({ children }) {
     }
   };
 
-  // Initial Fetch
   useEffect(() => {
     fetchPortfolio();
   }, []);
@@ -124,12 +120,15 @@ export function TradeProvider({ children }) {
   return (
     <TradeContext.Provider
       value={{
-        balance,
+        user,
+        balance,         // Cash Balance
+        availableBalance: balance, // Alias for Dashboard
+        portfolioValue,  // Invested + Cash or just Invested? Usually "Net Worth" = Cash + Invested
         orders,
         holdings,
         buyStock,
         sellStock,
-        fetchPortfolio // Create access for login components to trigger refresh
+        fetchPortfolio
       }}
     >
       {children}

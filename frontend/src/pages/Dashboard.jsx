@@ -1,283 +1,197 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { usePrices } from '../context/PriceContext';
-import { authFetch } from '../services/api';
-import NewsWidget from '../components/NewsWidget';
-
-const StatCard = ({ title, value, subtext, trend, loading }) => (
-  <div className="glass-card">
-    <h3 style={{ fontSize: "0.9rem", color: "var(--text-secondary)", marginBottom: "0.5rem" }}>
-      {title}
-    </h3>
-    <div style={{ fontSize: "1.8rem", fontWeight: "700", marginBottom: "0.25rem" }}>
-      {loading ? "..." : value}
-    </div>
-    <div style={{ fontSize: "0.85rem", color: trend === 'up' ? "var(--success)" : trend === 'down' ? "var(--danger)" : "var(--text-secondary)" }}>
-      {subtext}
-    </div>
-  </div>
-);
-
-const MarketMovers = () => {
-  const { prices } = usePrices();
-  const [marketValues, setMarket] = useState("IND"); // IND or USA
-
-  const indStocks = ["RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK", "SBIN", "BHARTIARTL", "ITC"];
-  const usaStocks = ["IBM", "TSLA", "AAPL", "NVDA"];
-
-  const currentList = marketValues === "IND" ? indStocks : usaStocks;
-
-  // Filter, Sort and Map
-  const movers = currentList
-    .map(symbol => {
-      const data = prices[symbol];
-      return {
-        symbol,
-        price: data?.price || 0,
-        change: data?.change || 0,
-        changePercent: data?.changePercent || 0
-      };
-    })
-    .sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent))
-    .slice(0, 5); // Top 5
-
-  return (
-    <div className="glass-card" style={{ height: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h2>Market Movers {marketValues === 'IND' ? '🇮🇳' : '🇺🇸'}</h2>
-        <div style={{ background: 'var(--glass-bg)', borderRadius: '8px', padding: '4px', border: 'var(--glass-border)' }}>
-          <button
-            onClick={() => setMarket("IND")}
-            style={{
-              background: marketValues === "IND" ? "var(--accent-gradient)" : "transparent",
-              border: "none",
-              color: "white",
-              padding: "6px 14px",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontSize: "0.8rem",
-              fontWeight: "600",
-              transition: "all 0.3s ease"
-            }}
-          >IND</button>
-          <button
-            onClick={() => setMarket("USA")}
-            style={{
-              background: marketValues === "USA" ? "var(--accent-gradient)" : "transparent",
-              border: "none",
-              color: "white",
-              padding: "6px 14px",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontSize: "0.8rem",
-              fontWeight: "600",
-              transition: "all 0.3s ease"
-            }}
-          >USA</button>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-        {movers.length === 0 ? (
-          <div style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '1rem' }}>Loading market data...</div>
-        ) : (
-          movers.map((stock) => (
-            <div key={stock.symbol} style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '12px 0',
-              borderBottom: '1px solid var(--glass-border)'
-            }}>
-              <div>
-                <div style={{ fontWeight: '700', fontSize: '1.05rem' }}>{stock.symbol}</div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                  {marketValues === 'IND' ? '₹' : '$'}{stock.price.toFixed(2)}
-                </div>
-              </div>
-              <div style={{
-                textAlign: 'right',
-                color: stock.changePercent >= 0 ? 'var(--success)' : 'var(--danger)',
-                fontWeight: '600',
-                textShadow: stock.changePercent >= 0 ? '0 0 10px var(--success-glow)' : '0 0 10px var(--danger-glow)'
-              }}>
-                <div>{stock.changePercent > 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%</div>
-                <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-                  {stock.change > 0 ? '+' : ''}{stock.change.toFixed(2)}
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-};
+import { useState, useEffect } from "react";
+import { useTrade } from "../context/TradeContext";
+import Card from "../components/Card";
+import StatWidget from "../components/StatWidget";
+import SentimentBar from "../components/SentimentBar";
+import PortfolioHeatmap from "../components/PortfolioHeatmap";
+import NewsWidget from "../components/NewsWidget";
+import TradePanel from "../components/TradePanel";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { usePrices } from "../context/PriceContext";
 
 export default function Dashboard() {
+  const { user, portfolioValue = 0, availableBalance = 0, holdings = {}, orders = [] } = useTrade();
   const { prices } = usePrices();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await authFetch('/portfolio');
-        if (res.user) {
-          setData(res);
-        }
-      } catch (err) {
-        console.error("Dashboard fetch error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  // Calculate generic daily P&L (mock logic)
+  const dayPnL = portfolioValue * 0.015; // 1.5% daily gain mock
+  const isPositive = dayPnL >= 0;
 
-  // Real-time calculations
-  const { netWorth, todaysPnL, availableBalance, activePositions } = useMemo(() => {
-    if (!data) return { netWorth: 0, todaysPnL: 0, availableBalance: 0, activePositions: 0 };
+  // Sentiment (0-100)
+  const sentimentValue = 65; // Slightly Bullish
 
-    const balance = data.user.balance;
-    let holdingsValue = 0;
-    let dayPnL = 0;
+  const [showQuickTrade, setShowQuickTrade] = useState(false);
 
-    // Calculate holdings value based on LIVE prices
-    if (data.holdings) {
-      data.holdings.forEach(h => {
-        const currentPrice = prices[h.symbol]?.price || h.avgPrice; // Fallback to avg if no live price
-        const change = prices[h.symbol]?.change || 0;
+  // Stats Data
+  const stats = [
+    { title: "Net Worth", value: `₹${portfolioValue.toLocaleString()}`, change: "-0.00%", isPositive: false, icon: "$" },
+    { title: "Available Balance", value: `₹${availableBalance.toLocaleString()}`, change: "0.00%", isPositive: true, icon: "💳" },
+    { title: "Today's P&L", value: `₹${Math.abs(dayPnL).toFixed(2)}`, change: isPositive ? "Win" : "Loss", isPositive: isPositive, icon: "📈" },
+    { title: "Open Positions", value: Object.keys(holdings || {}).length, change: "Active", isPositive: true, icon: "📊" },
+  ];
 
-        holdingsValue += h.quantity * currentPrice;
-        dayPnL += h.quantity * change;
-      });
-    }
-
-    return {
-      netWorth: balance + holdingsValue,
-      todaysPnL: dayPnL,
-      availableBalance: balance,
-      activePositions: data.holdings?.length || 0
-    };
-  }, [data, prices]);
-
-  const pnlPercent = netWorth > 0 ? (todaysPnL / netWorth) * 100 : 0;
+  const marketMovers = [
+    { symbol: "ICICIBANK", price: "1355.40", change: "-2.04%" },
+    { symbol: "ITC", price: "422.45", change: "+1.21%" },
+    { symbol: "SBIN", price: "877.00", change: "+1.01%" },
+    { symbol: "INFY", price: "1642.70", change: "-1.01%" },
+  ];
 
   return (
-    <div className="dashboard-container">
-      <div style={{ marginBottom: "2rem" }}>
-        <h1>Overview</h1>
-        <p style={{ color: "var(--text-secondary)" }}>
-          Welcome back, {data?.user?.name || 'Trader'}! Here's what's happening in your portfolio.
-        </p>
+    <div className="p-6 max-w-[1600px] mx-auto space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-2">
+        <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-[var(--text-primary)] to-[var(--text-secondary)] bg-clip-text text-transparent mb-2">
+            Command Center
+          </h1>
+          <p className="text-[var(--text-secondary)]">
+            Welcome back, <span className="font-semibold text-[var(--accent)]">{user?.name || 'Trader'}</span>. Market is active.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <div className="hidden md:block w-48">
+            <SentimentBar value={sentimentValue} />
+          </div>
+          <button
+            onClick={() => setShowQuickTrade(true)}
+            className="btn btn-primary shadow-lg shadow-blue-500/20 animate-pulse-slow"
+          >
+            ⚡ Quick Trade
+          </button>
+        </div>
       </div>
 
-      <div className="dashboard-grid">
-        <style>{`
-          .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-          }
-          .content-grid {
-             display: grid;
-             grid-template-columns: 2fr 1fr;
-             gap: 1.5rem;
-             align-items: start;
-          }
-          .col-left {
-             display: flex;
-             flex-direction: column;
-             gap: 1.5rem;
-          }
-          @media (max-width: 1024px) {
-            .content-grid { grid-template-columns: 1fr; }
-          }
-        `}</style>
-
-        <StatCard
-          title="Net Worth"
-          value={`₹${netWorth.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          subtext={`${todaysPnL >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}% today`}
-          trend={todaysPnL >= 0 ? "up" : "down"}
-          loading={loading}
-        />
-        <StatCard
-          title="Available Balance"
-          value={`₹${availableBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          subtext="Ready to deploy"
-          trend="neutral"
-          loading={loading}
-        />
-        <StatCard
-          title="Today's P&L"
-          value={`₹${Math.abs(todaysPnL).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          subtext={todaysPnL >= 0 ? "Profit" : "Loss"}
-          trend={todaysPnL >= 0 ? "up" : "down"}
-          loading={loading}
-        />
-        <StatCard
-          title="Open Positions"
-          value={activePositions}
-          subtext="Active Investments"
-          trend="neutral"
-          loading={loading}
-        />
+      {/* Grid Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, i) => (
+          <div key={i} className="animate-fade-in" style={{ animationDelay: `${0.1 * (i + 1)}s` }}>
+            <StatWidget {...stat} />
+          </div>
+        ))}
       </div>
 
-      <div className="content-grid">
-        <div className="col-left">
-          <MarketMovers />
-
-          <div className="glass-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <h2>Recent Activity</h2>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Last 5 Transactions</span>
-            </div>
-
-            {!data?.orders || data.orders.length === 0 ? (
-              <div style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '1rem' }}>No recent transactions</div>
-            ) : (
-              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                {data.orders.slice(0, 5).map(txn => (
-                  <li key={txn._id} style={{
-                    padding: "12px 0",
-                    borderBottom: "1px solid var(--glass-border)",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center"
-                  }}>
+      {/* Main Content Areas */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column (2/3) */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card title="Market Movers">
+              <div className="space-y-3 mt-4">
+                {marketMovers.map((m, i) => (
+                  <div key={i} className="flex justify-between items-center py-2 border-b border-[var(--text-muted)]/10 last:border-0 hover:bg-[var(--text-primary)]/5 px-2 rounded -mx-2 transition-colors cursor-pointer">
                     <div>
-                      <span style={{
-                        fontWeight: '600',
-                        color: txn.type === 'BUY' ? 'var(--success)' : 'var(--danger)',
-                        marginRight: '8px'
-                      }}>
-                        {txn.type}
-                      </span>
-                      <span>{txn.symbol}</span>
-                      <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
-                        {new Date(txn.date).toLocaleString()}
-                      </div>
+                      <div className="font-bold text-[var(--text-primary)]">{m.symbol}</div>
+                      <div className="text-xs text-[var(--text-secondary)]">₹{m.price}</div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: '500' }}>{txn.quantity} qty</div>
-                      <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
-                        @ ₹{txn.price}
-                      </div>
+                    <div className={`font-mono font-bold ${m.change.startsWith('+') ? 'text-emerald-500' : 'text-red-500'}`}>
+                      {m.change}
                     </div>
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
+            </Card>
+
+            <Card title="Portfolio Heatmap" className="min-h-[300px]">
+              <div className="h-full pt-4">
+                <PortfolioHeatmap holdings={holdings} prices={prices} />
+              </div>
+            </Card>
+          </div>
+
+          <Card title="Performance Analytics">
+            <div className="h-[300px] w-full mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={[
+                  { name: '09:30', value: 42000 },
+                  { name: '10:30', value: 42150 },
+                  { name: '11:30', value: 41900 },
+                  { name: '12:30', value: 42300 },
+                  { name: '13:30', value: 42450 },
+                  { name: '14:30', value: 42380 },
+                  { name: '15:30', value: 42600 },
+                ]}>
+                  <defs>
+                    <linearGradient id="colorDash" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                  <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} domain={['dataMin - 100', 'dataMax + 100']} />
+                  <Tooltip
+                    contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                    itemStyle={{ color: '#fff' }}
+                  />
+                  <Area type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorDash)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <Card title="Recent Activity" className="overflow-hidden">
+            {orders.length === 0 ? (
+              <div className="p-8 text-center text-[var(--text-secondary)]">No recent activity.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="text-xs uppercase tracking-wide text-[var(--text-muted)] border-b border-[var(--text-muted)]/10">
+                      <th className="p-4">Time</th>
+                      <th className="p-4">Symbol</th>
+                      <th className="p-4">Type</th>
+                      <th className="p-4">Price</th>
+                      <th className="p-4 text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orders.slice(0, 5).map((o, i) => (
+                      <tr key={i} className="border-b border-[var(--text-muted)]/5 hover:bg-[var(--text-primary)]/5 transition-colors">
+                        <td className="p-4 text-xs font-mono text-[var(--text-secondary)]">{new Date(o.date).toLocaleTimeString()}</td>
+                        <td className="p-4 font-bold text-[var(--text-primary)]">{o.symbol}</td>
+                        <td className={`p-4 font-bold text-xs ${o.type === 'BUY' ? 'text-emerald-500' : 'text-red-500'}`}>{o.type}</td>
+                        <td className="p-4 font-mono text-[var(--text-primary)]">₹{o.price}</td>
+                        <td className="p-4 text-right">
+                          <span className="px-2 py-1 rounded bg-emerald-500/10 text-emerald-500 text-xs font-bold">FILLED</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
+          </Card>
+        </div>
+
+        {/* Right Column (1/3) */}
+        <div className="space-y-6">
+          <NewsWidget />
+
+          <Card className="bg-gradient-to-br from-[var(--primary)]/10 to-[var(--accent)]/10 border border-[var(--primary)]/20">
+            <h3 className="text-[var(--text-primary)] font-bold mb-2">Pro Tip 💡</h3>
+            <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+              Diversification is key. Don't put all your eggs in one basket. Monitor the heatmap to see exposure risks.
+            </p>
+          </Card>
+        </div>
+      </div>
+
+      {showQuickTrade && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in" onClick={() => setShowQuickTrade(false)}>
+          <div className="glass-card w-full max-w-sm overflow-hidden shadow-2xl shadow-blue-500/10 ring-1 ring-white/10" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center p-4 border-b border-[var(--text-muted)]/10 bg-[var(--bg-secondary)]">
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">Quick Trade</h3>
+              <button onClick={() => setShowQuickTrade(false)} className="p-1 rounded hover:bg-[var(--text-primary)]/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-4 bg-[var(--bg-primary)]">
+              <TradePanel symbol="RELIANCE" />
+            </div>
           </div>
         </div>
-
-        <div className="col-right">
-          <NewsWidget />
-        </div>
-      </div>
+      )}
     </div>
   );
 }

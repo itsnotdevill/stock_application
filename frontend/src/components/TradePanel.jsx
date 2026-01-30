@@ -28,18 +28,15 @@ export default function TradePanel({ symbol = "RELIANCE" }) {
   };
 
   return (
-    <div style={{ padding: "0.5rem" }}>
-      <div style={{ marginBottom: "1.5rem", borderBottom: "1px solid var(--glass-border)", paddingBottom: "1rem" }}>
-        <h3 style={{ margin: 0, fontSize: "1.2rem" }}>Place Order</h3>
-        <div style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginTop: "4px" }}>
-          {symbol} <span style={{ color: "var(--accent-color)" }}>
-            {currentPrice > 0 ? `${currency}${currentPrice.toFixed(2)}` : "Loading..."}
-          </span>
-        </div>
+    <div className="p-2">
+      <div className="mb-4 text-center">
+        <span className="text-[var(--text-secondary)] text-xs">Trading</span>
+        <span className="font-bold text-[var(--accent)] mx-1">{symbol}</span>
+        <span className="font-mono text-[var(--text-primary)] text-sm">{currentPrice > 0 ? `${currency}${currentPrice.toFixed(2)}` : "..."}</span>
       </div>
 
-      <div style={{ marginBottom: "1.5rem" }}>
-        <label style={{ display: "block", color: "var(--text-secondary)", marginBottom: "8px", fontSize: "0.9rem" }}>
+      <div className="mb-6">
+        <label className="block text-[var(--text-secondary)] mb-2 text-sm font-medium">
           Quantity
         </label>
         <input
@@ -47,27 +44,17 @@ export default function TradePanel({ symbol = "RELIANCE" }) {
           min="1"
           value={qty}
           onChange={(e) => setQty(Number(e.target.value))}
-          style={{
-            width: "100%",
-            padding: "12px",
-            background: "rgba(0,0,0,0.2)",
-            border: "1px solid var(--glass-border)",
-            borderRadius: "var(--radius-md)",
-            color: "white",
-            fontSize: "1rem",
-            boxSizing: "border-box"
-          }}
+          className="w-full p-3 bg-[var(--bg-secondary)] border border-[var(--text-muted)]/20 rounded-lg text-[var(--text-primary)] text-base focus:border-[var(--primary)] outline-none transition-colors"
         />
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "8px", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+        <div className="flex justify-between mt-2 text-xs text-[var(--text-secondary)] font-medium">
           <span>Margin Req:</span>
-          <span>{currentPrice > 0 ? `${currency}${(qty * currentPrice).toFixed(2)}` : "--"}</span>
+          <span className="font-mono text-[var(--text-primary)]">{currentPrice > 0 ? `${currency}${(qty * currentPrice).toFixed(2)}` : "--"}</span>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+      <div className="grid grid-cols-2 gap-4">
         <button
-          className="btn-primary"
-          style={{ background: "var(--success)", opacity: (loading || currentPrice <= 0) ? 0.7 : 1 }}
+          className="btn flex justify-center py-3 rounded-lg font-bold text-white bg-[var(--success)] shadow-lg shadow-emerald-500/20 hover:bg-emerald-500 hover:shadow-emerald-500/30 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => handleOrder('BUY')}
           disabled={loading || currentPrice <= 0}
         >
@@ -75,8 +62,7 @@ export default function TradePanel({ symbol = "RELIANCE" }) {
         </button>
 
         <button
-          className="btn-primary"
-          style={{ background: "var(--danger)", opacity: loading ? 0.7 : 1 }}
+          className="btn flex justify-center py-3 rounded-lg font-bold text-white bg-[var(--danger)] shadow-lg shadow-red-500/20 hover:bg-red-500 hover:shadow-red-500/30 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => handleOrder('SELL')}
           disabled={loading}
         >
@@ -84,7 +70,7 @@ export default function TradePanel({ symbol = "RELIANCE" }) {
         </button>
       </div>
 
-      <div style={{ marginTop: "1.5rem", fontSize: "0.8rem", color: "var(--text-secondary)", textAlign: "center" }}>
+      <div className="mt-6 text-xs text-[var(--text-secondary)] text-center font-medium opacity-70">
         {loading ? "Processing Order..." : "Market Limit Order • Day"}
       </div>
     </div>
